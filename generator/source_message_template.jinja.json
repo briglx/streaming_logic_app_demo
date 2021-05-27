@@ -1,0 +1,34 @@
+{
+    "deviceId": "{{device_id}}",
+    "createdDateTime": "{{create_datetime}}",
+    "period.timeInterval": {
+        "start": "{{period_start_time}}",
+        "end": "{{period_end_time}}"
+    },
+    "timeSeries": [
+    {
+        "measurementUnit.name": "KWH",
+        "period": [
+        {% for item in values  %}
+            {
+                "resolution": "PT1D",
+                "timeInterval": {
+                    "start": "{{item.start_interval}}",
+                    "end": "{{item.end_interval}}"
+                },
+                "point": [
+                    {
+                        "position": "1",
+                        "outQuantity.quantity": "{{item.value}}",
+                        "outQuantity.quality": "{{item.quality}}"
+                    }
+                ]
+            }
+        {% if not loop.last %}
+        ,
+        {% endif %}
+        {% endfor %}
+        ]
+    }
+    ]
+}  

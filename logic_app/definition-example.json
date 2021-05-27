@@ -1,0 +1,134 @@
+{
+    "definition": {
+        "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+        "actions": {
+            "Create_blob": {
+                "inputs": {
+                    "body": "@body('Transform_JSON_to_JSON')",
+                    "host": {
+                        "connection": {
+                            "name": "@parameters('$connections')['azureblob']['connectionId']"
+                        }
+                    },
+                    "method": "post",
+                    "path": "/datasets/default/files",
+                    "queries": {
+                        "folderPath": "/messages",
+                        "name": "@triggerBody()?['SystemProperties']?['EnqueuedTimeUtc']",
+                        "queryParametersSingleEncoded": true
+                    }
+                },
+                "runAfter": {
+                    "Transform_JSON_to_JSON": [
+                        "Succeeded"
+                    ]
+                },
+                "runtimeConfiguration": {
+                    "contentTransfer": {
+                        "transferMode": "Chunked"
+                    }
+                },
+                "type": "ApiConnection"
+            },
+            "Create_blob_2": {
+                "inputs": {
+                    "body": "@body('Transform_JSON_to_JSON_(Func)')",
+                    "host": {
+                        "connection": {
+                            "name": "@parameters('$connections')['azureblob']['connectionId']"
+                        }
+                    },
+                    "method": "post",
+                    "path": "/datasets/default/files",
+                    "queries": {
+                        "folderPath": "/messages",
+                        "name": "@{concat('func-', triggerBody()?['SystemProperties']?['EnqueuedTimeUtc'])}",
+                        "queryParametersSingleEncoded": true
+                    }
+                },
+                "runAfter": {
+                    "Transform_JSON_to_JSON_(Func)": [
+                        "Succeeded"
+                    ]
+                },
+                "runtimeConfiguration": {
+                    "contentTransfer": {
+                        "transferMode": "Chunked"
+                    }
+                },
+                "type": "ApiConnection"
+            },
+            "Transform_JSON_to_JSON": {
+                "inputs": {
+                    "content": "@triggerBody()?['ContentData']",
+                    "integrationAccount": {
+                        "map": {
+                            "name": "TraslateAtoB"
+                        }
+                    }
+                },
+                "kind": "JsonToJson",
+                "runAfter": {},
+                "type": "Liquid"
+            },
+            "Transform_JSON_to_JSON_(Func)": {
+                "inputs": {
+                    "body": "@triggerBody()?['ContentData']",
+                    "function": {
+                        "id": "/subscriptions/<subscription_id>/resourceGroups/JsonConvert/providers/Microsoft.Web/sites/JsonConvertFunc/functions/liquid_json_transform"
+                    }
+                },
+                "runAfter": {},
+                "type": "Function"
+            }
+        },
+        "contentVersion": "1.0.0.0",
+        "outputs": {},
+        "parameters": {
+            "$connections": {
+                "defaultValue": {},
+                "type": "Object"
+            }
+        },
+        "triggers": {
+            "When_events_are_available_in_Event_Hub": {
+                "inputs": {
+                    "host": {
+                        "connection": {
+                            "name": "@parameters('$connections')['eventhubs']['connectionId']"
+                        }
+                    },
+                    "method": "get",
+                    "path": "/@{encodeURIComponent('jsonconvert3_eh')}/events/batch/head",
+                    "queries": {
+                        "consumerGroupName": "$Default",
+                        "contentType": "application/json",
+                        "maximumEventsCount": 50
+                    }
+                },
+                "recurrence": {
+                    "frequency": "Minute",
+                    "interval": 1
+                },
+                "splitOn": "@triggerBody()",
+                "type": "ApiConnection"
+            }
+        }
+    },
+    "parameters": {
+        "$connections": {
+            "value": {
+                "azureblob": {
+                    "connectionId": "/subscriptions/<subscription_id>/resourceGroups/JsonConvert/providers/Microsoft.Web/connections/azureblob",
+                    "connectionName": "azureblob",
+                    "id": "/subscriptions/<subscription_id>/providers/Microsoft.Web/locations/westus/managedApis/azureblob"
+                },
+                "eventhubs": {
+                    "connectionId": "/subscriptions/<subscription_id>/resourceGroups/JsonConvert/providers/Microsoft.Web/connections/eventhubs",
+                    "connectionName": "eventhubs",
+                    "id": "/subscriptions/<subscription_id>/providers/Microsoft.Web/locations/westus/managedApis/eventhubs"
+                }
+            }
+        }
+    }
+}
