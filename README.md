@@ -40,16 +40,30 @@ EH_NAMESPACE=logic_app_demo_ehn
 EH_NAME=logic_app_demo_eh
 
 # Logic App variables
-LOGIC_APP_NAME = TicketApp
+LOGIC_APP_NAME=TicketApp
 
-# Existing Resources
-ACR_REGISTRY_NAME = <existing-registry-name>
-SERVICE_PRINCIPAL_ID = <existing-service-principal-id>
-SERVICE_PRINCIPAL_PASSWORD = <existing-service-principal-password>
+
 ```
 
 ### Resource Group
 
 Create a resource group for this project
 
+```bash
 az group create --name $RG_NAME --location $RG_REGION
+```
+
+### Evenhubs
+
+
+```bash
+# Create an Event Hubs namespace. Specify a name for the Event Hubs namespace.
+az eventhubs namespace create --name $EH_NAMESPACE --resource-group $RG_NAME -l $RG_REGION
+
+# Create an event hub. Specify a name for the event hub.
+az eventhubs eventhub create --name $EH_NAME --resource-group $RG_NAME --namespace-name $EH_NAMESPACE
+
+#Create Read Policy and Connection string**
+#TBD
+
+```
