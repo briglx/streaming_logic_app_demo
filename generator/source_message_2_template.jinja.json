@@ -1,0 +1,23 @@
+{
+    "deviceId": "{{device.device_id}}",
+    "eventId": "{{event.event_id}}",
+    "event": "{{event.event_desc}}",
+    "eventName": "{{event.event_name}}",
+    "setOrClear": "{{event.set_or_clear}}",
+    "operatorId": "{{device.operator_id}}",
+    "eventDtm": "{{event.create_datetime}}",
+    "compId": "{{device.componant_id}}",
+    "compPosition": "{{device.componant_position}}",
+    "ipAddress": "{{device.ip_address}}",
+    "stopPointId": "{{event.stop_point_id}}",
+    "deviceSerialNbr": "{{device.device_serial_number}}",
+    "deviceStateArray": [
+        {% for item in event["values"]  %}
+        "{{item.value}}"
+        {% if not loop.last %}
+        ,
+        {% endif %}
+        {% endfor %}],
+    "errorCodeArray": [],
+    "eventReasonCodeId": "{{event.event_reason_code_id}}"    
+}  

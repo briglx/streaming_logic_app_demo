@@ -1,1 +1,10 @@
-generator/local.env
+# Python specific
+__pycache__
+*.py[cod]
+*$py.class
+
+# Environment
+.venv
+
+# Project specific
+local.env

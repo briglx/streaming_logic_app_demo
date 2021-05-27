@@ -2,6 +2,7 @@
 """Main script for json convert."""
 import argparse
 import asyncio
+import ipaddress
 import logging
 import os
 import random
@@ -23,6 +24,8 @@ FAULT_DURATION = 5
 FAULT_CHANCE = 0.1
 WAIT_TIME = 10
 
+IP_NET = ipaddress.ip_network("10.0.0.0/12")
+
 
 def generate_guid():
     """Generate a UUID string."""
@@ -31,7 +34,7 @@ def generate_guid():
 
 def generate_id():
     """Generate Hexadecimal 32 length id."""
-    return "%032x" % random.randrange(16 ** 32)
+    return f"{random.randrange(16 ** 32):32x}"
 
 
 def get_date_now_isoformat():
@@ -46,11 +49,28 @@ def get_date_isoformat(date):
     return cur_time.isoformat().replace("+00:00", "Z")
 
 
+def create_device(device_index):
+    """Create device for given index."""
+    device_id = generate_id()
+
+    device = {
+        "device_id": device_id,
+        "device_serial_number": f"sn-{random.randrange(16 ** 12):12x}",
+        "componant_id": f"comp-{device_id}",
+        "componant_position": f"{random.randrange(2 ** 8):2x}",
+        "ip_address": IP_NET[device_index],
+        "operator_id": f"op-{device_id}",
+    }
+
+    return device
+
+
 def create_device_list(count=TOTAL_DEVICE_COUNT):
     """Create list of devices for testing."""
     device_list = []
-    for _ in range(count):
-        device_list.append(generate_id())
+    for device_index in range(count):
+        device = create_device(device_index)
+        device_list.append(device)
     return device_list
 
 
@@ -59,9 +79,10 @@ def get_random_device_id(device_list):
     return random.choice(device_list)
 
 
-def create_sample_data(device_id):
+def create_sample_data(device):
     """Generate Sample Data."""
-    # device_id = get_random_device_id(device_list)
+    # Create message specific data
+    event_id = generate_guid()
     period_start_time = datetime.utcnow()
     period_count = random.randint(0, 30)
     period_end_time = period_start_time + timedelta(0, period_count)
@@ -78,18 +99,26 @@ def create_sample_data(device_id):
             {
                 "start_interval": get_date_isoformat(start_interval),
                 "end_interval": get_date_isoformat(end_interval),
-                "value": cur_value,
+                "value": f"{cur_value:.2f}",
             }
         )
         cur_value = cur_value + delta_value
 
     sample_data = {
-        "device_id": device_id,
-        "create_datetime": get_date_isoformat(period_start_time),
-        "SystemGuid": generate_guid(),
-        "period_start_time": get_date_isoformat(period_start_time),
-        "period_end_time": get_date_isoformat(period_end_time),
-        "values": values,
+        "device": device,
+        "event": {
+            "event_id": event_id,
+            "event_desc": f"Event desc for {event_id}",
+            "event_name": f"Event Name for {event_id}",
+            "set_or_clear": True,
+            "create_datetime": get_date_isoformat(period_start_time),
+            "stop_point_id": f"{random.randrange(2 ** 32):08x}",
+            "event_reason_code_id": f"{random.randrange(2 ** 16):04x}",
+            "period_start_time": get_date_isoformat(period_start_time),
+            "period_end_time": get_date_isoformat(period_end_time),
+            "values": values,
+        },
+        "system_guid": generate_guid(),
     }
 
     return sample_data
@@ -102,20 +131,21 @@ def create_drop_list(device_list, count):
 
 def drop_device_message(data, drop_list, device_drop_count):
     """Check if the message should be dropped."""
-    if data["device_id"] in drop_list:
+    device_id = data["device"]["device_id"]
+    if data["device"] in drop_list:
 
         # Add tracking
-        if data["device_id"] not in device_drop_count:
-            device_drop_count[data["device_id"]] = 0
+        if device_id not in device_drop_count:
+            device_drop_count[device_id] = 0
 
         # Check in in fault state
-        if device_drop_count[data["device_id"]] > 0:
-            device_drop_count[data["device_id"]] -= 1
+        if device_drop_count[device_id] > 0:
+            device_drop_count[device_id] -= 1
             return True
 
         # Mark device to fail
         if random.random() < FAULT_CHANCE:
-            device_drop_count[data["device_id"]] = FAULT_DURATION
+            device_drop_count[device_id] = FAULT_DURATION
 
     return False
 
@@ -134,10 +164,10 @@ async def run():
             # Create a batch.
             event_data_batch = await PRODUCER.create_batch()
 
-            for device_id in device_list:
+            for device in device_list:
 
                 # Get data
-                data = create_sample_data(device_id)
+                data = create_sample_data(device)
 
                 if drop_device_message(data, device_drop_list, device_drop_count):
                     logging.info("dropping device message...")
