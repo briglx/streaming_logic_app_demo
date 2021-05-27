@@ -93,10 +93,10 @@ Run generator in docker
 # Build and run image
 > docker build --pull --rm -f "dockerfile" -t streaminglogicappdemo:latest "."
 > docker run --rm -it --env-file local.env streaminglogicappdemo:latest
-```
 
 #Run app
 > python main.py --template_path /path/to/templates/
+```
 
 # Development
 
