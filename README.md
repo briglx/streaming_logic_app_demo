@@ -41,8 +41,6 @@ EH_NAME=logic_app_demo_eh
 
 # Logic App variables
 LOGIC_APP_NAME=TicketApp
-
-
 ```
 
 ### Resource Group
@@ -54,7 +52,6 @@ az group create --name $RG_NAME --location $RG_REGION
 ```
 
 ### Evenhubs
-
 
 ```bash
 # Create an Event Hubs namespace. Specify a name for the Event Hubs namespace.
@@ -73,7 +70,8 @@ az eventhubs eventhub create --name $EH_NAME --resource-group $RG_NAME --namespa
 **Create Logic App**
 Make a copy of `logic_app\definition-example.json` and rename to `logic_app\definition.json`. Edit the file with the necessary values.
 
-The `<subscription_id>` is the target subscription id.
+- The `<subscription_id>` is the target subscription id.
+
 Deploy the Logic App
 
 ```bash
@@ -83,20 +81,16 @@ az logic workflow create --definition /path_to_project/logic_app/definition.json
 --resource-group $RG_NAME
 ```
 
-
 ## Generator
 The generator is a python application that runs in a docker container. The container expects the following environment variables stored in a `local.env` file.
 
 Run generator in docker
 
 ```bash
-# Build and run image
+# Build and run image localy
 > docker build --pull --rm -f "dockerfile" -t streaminglogicappdemo:latest "."
 > docker run --rm -it --env-file local.env streaminglogicappdemo:latest
 
 #Run app
 > python main.py
 ```
-
-# Development
-
