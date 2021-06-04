@@ -94,3 +94,90 @@ Run generator in docker
 #Run app
 > python main.py
 ```
+
+# Development
+
+The development environment is to manages two types of environments:
+
+- Python Generator Code
+- Azure Resources
+
+## Python Generator code
+
+Setup your dev environment by creating a virtual environment
+
+```bash
+# virtualenv \path\to\.venv -p path\to\specific_version_python.exe
+python -m venv .venv.
+.venv\scripts\activate
+
+deactivate
+```
+
+## Style Guidelines
+
+This project enforces quite strict [PEP8](https://www.python.org/dev/peps/pep-0008/) and [PEP257 (Docstring Conventions)](https://www.python.org/dev/peps/pep-0257/) compliance on all code submitted.
+
+We use [Black](https://github.com/psf/black) for uncompromised code formatting.
+
+Summary of the most relevant points:
+
+- Comments should be full sentences and end with a period.
+- [Imports](https://www.python.org/dev/peps/pep-0008/#imports) should be ordered.
+- Constants and the content of lists and dictionaries should be in alphabetical order.
+- It is advisable to adjust IDE or editor settings to match those requirements.
+
+### Ordering of imports
+
+Instead of ordering the imports manually, use [isort](https://github.com/timothycrosley/isort).
+
+```bash
+
+    pip3 install isort
+    isort -rc .
+
+```
+
+### Use new style string formatting
+
+Prefer [f-strings](https://docs.python.org/3/reference/lexical_analysis.html#f-strings) over ``%`` or ``str.format``.
+
+```python
+
+    #New
+    f"{some_value} {some_other_value}"
+    # Old, wrong
+    "{} {}".format("New", "style")
+    "%s %s" % ("Old", "style")
+
+```
+
+One exception is for logging which uses the percentage formatting. This is to avoid formatting the log message when it is suppressed.
+
+```python
+
+    _LOGGER.info("Can't connect to the webservice %s at %s", string1, string2)
+
+```
+
+### Testing
+You'll need to install the test dependencies into your Python environment:
+
+```bash
+
+    pip3 install -r requirements_dev.txt
+
+```
+
+Now that you have all test dependencies installed, you can run linting and tests on the project:
+
+```bash
+
+    isort .
+    codespell  --skip=".venv"
+    black generator
+    flake8 generator
+    pylint generator
+    pydocstyle generator
+
+```

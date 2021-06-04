@@ -11,10 +11,9 @@ import sys
 import uuid
 from datetime import datetime, timedelta, timezone
 
+import template_jinja as template
 from azure.eventhub import EventData
 from azure.eventhub.aio import EventHubProducerClient
-
-import template_jinja as template
 
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 
@@ -22,7 +21,7 @@ TOTAL_DEVICE_COUNT = 60
 FAULTY_DEVICE_COUNT = 3
 FAULT_DURATION = 5
 FAULT_CHANCE = 0.1
-WAIT_TIME = 10
+DEFAULT_WAIT_TIME_SEC = 30
 
 IP_NET = ipaddress.ip_network("10.0.0.0/12")
 
@@ -185,7 +184,7 @@ async def run():
             await PRODUCER.send_batch(event_data_batch)
 
             logging.info("waiting...")
-            await asyncio.sleep(WAIT_TIME)
+            await asyncio.sleep(WAIT_TIME_SEC)
 
 
 if __name__ == "__main__":
@@ -215,6 +214,12 @@ if __name__ == "__main__":
         "-ts",
         help="Template to create the Source Message",
     )
+    parser.add_argument(
+        "--wait_time_seconds",
+        "-w",
+        type=int,
+        help="Time in seconds to wait between sending messages.",
+    )
 
     args = parser.parse_args()
 
@@ -225,6 +230,11 @@ if __name__ == "__main__":
     TEMPLATE_PATH = args.template_path or os.environ.get("TEMPLATE_PATH")
     TEMPLATE_SOURCE_MESSAGE = args.template_source_message or os.environ.get(
         "TEMPLATE_SOURCE_MESSAGE"
+    )
+    WAIT_TIME_SEC = (
+        args.wait_time_seconds or int(os.environ.get("WAIT_TIME_SEC"))
+        if (os.environ.get("WAIT_TIME_SEC").isdigit())
+        else DEFAULT_WAIT_TIME_SEC
     )
 
     if not CONNECTION_STRING:
