@@ -41,6 +41,10 @@ EH_NAME=logic_app_demo_eh
 
 # Logic App variables
 LOGIC_APP_NAME=TicketApp
+
+# Kafka
+KAFKA_VM_NAME=kafka-vm
+KAFKA_TOPIC=logic_app_demo
 ```
 
 ### Resource Group
@@ -94,6 +98,40 @@ Run generator in docker
 #Run app
 > python main.py
 ```
+
+## Kafka
+
+Deploy the bitnami image of kafka. 
+
+```bash
+
+az deployment group create --name "{$KAFKA_VM_NAME}deployment" --resource-group $RG_NAME --template-file kafka/template.json --parameters kafka/parameters.json
+
+# ssh onto machine
+ssh kafka_user@<public_ip_of_kafka_deployment>
+
+# create a new topic
+/opt/bitnami/kafka/bin/kafka-topics.sh --create --zookeeper localhost:2181 --replication-factor 1 --partitions 1 --topic $KAFKA_TOPIC
+
+# Start a new producer and generate a message in the topic
+export KAFKA_OPTS="-Djava.security.auth.login.config=/opt/bitnami/kafka/conf/kafka_jaas.conf"
+/opt/bitnami/kafka/bin/kafka-console-producer.sh --broker-list localhost:9092 --producer.config /opt/bitnami/kafka/conf/producer.properties --topic $KAFKA_TOPIC
+
+this is my first message
+this is my second message
+
+```
+
+ Press `CTRL-D` to send the message.
+
+ Collect and display the messages
+
+ ```bash
+
+ /opt/bitnami/kafka/bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic $KAFKA_TOPIC --consumer.config /opt/bitnami/kafka/conf/consumer.properties --from-beginning
+
+ ```
+
 
 # Development
 
