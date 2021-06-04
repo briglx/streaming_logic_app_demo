@@ -85,21 +85,7 @@ az logic workflow create --definition /path_to_project/logic_app/definition.json
 --resource-group $RG_NAME
 ```
 
-## Generator
-The generator is a python application that runs in a docker container. The container expects the following environment variables stored in a `local.env` file.
-
-Run generator in docker
-
-```bash
-# Build and run image localy
-> docker build --pull --rm -f "dockerfile" -t streaminglogicappdemo:latest "."
-> docker run --rm -it --env-file local.env streaminglogicappdemo:latest
-
-#Run app
-> python main.py
-```
-
-## Kafka
+### Kafka
 
 Deploy the bitnami image of kafka. 
 
@@ -131,6 +117,22 @@ this is my second message
  /opt/bitnami/kafka/bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic $KAFKA_TOPIC --consumer.config /opt/bitnami/kafka/conf/consumer.properties --from-beginning
 
  ```
+
+
+## Generator
+The generator is a python application that runs in a docker container. The container expects the following environment variables stored in a `local.env` file.
+
+Run generator in docker
+
+```bash
+# Build and run image localy
+> docker build --pull --rm -f "dockerfile" -t streaminglogicappdemo:latest "."
+> docker run --rm -it --env-file local.env streaminglogicappdemo:latest
+
+#Run app
+> python main.py
+```
+
 
 
 # Development
@@ -165,16 +167,6 @@ Summary of the most relevant points:
 - Constants and the content of lists and dictionaries should be in alphabetical order.
 - It is advisable to adjust IDE or editor settings to match those requirements.
 
-### Ordering of imports
-
-Instead of ordering the imports manually, use [isort](https://github.com/timothycrosley/isort).
-
-```bash
-
-    pip3 install isort
-    isort -rc .
-
-```
 
 ### Use new style string formatting
 
