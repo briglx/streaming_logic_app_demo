@@ -2,6 +2,40 @@
     "definition": {
         "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
         "actions": {
+            "Create_Record": {
+                "inputs": {
+                    "body": {
+                        "company": "@{concat('Sample Company')}",
+                        "contact_type": "@{concat('Sample Contact Type')}",
+                        "description": "@{triggerBody()?['ContentData']}",
+                        "opened_at": "@body('Parse_JSON')?['eventDtm']",
+                        "priority": "2",
+                        "short_description": "@{concat(body('Parse_JSON')?['eventId'], ' on ', body('Parse_JSON')?['deviceId'])}",
+                        "u_category": "@{concat('Sample Category')}",
+                        "u_event_code": "@{concat('Sample Event Code')}",
+                        "u_maintenance_type": "@{concat('Sample Maintenance Type')}",
+                        "u_subcategory": "@{concat('Sample Subcategory')}",
+                        "u_type": "@{concat('Sample Type')}"
+                    },
+                    "host": {
+                        "connection": {
+                            "name": "@parameters('$connections')['service-now']['connectionId']"
+                        }
+                    },
+                    "method": "post",
+                    "path": "/api/now/v2/table/@{encodeURIComponent('incident')}",
+                    "queries": {
+                        "sysparm_display_value": false,
+                        "sysparm_exclude_reference_link": true
+                    }
+                },
+                "runAfter": {
+                    "Parse_JSON": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "ApiConnection"
+            },
             "Parse_JSON": {
                 "inputs": {
                     "content": "@triggerBody()?['ContentData']",
@@ -103,6 +137,11 @@
                     "connectionId": "/subscriptions/<subscription_id>/resourceGroups/logic_demo/providers/Microsoft.Web/connections/eventhubs",
                     "connectionName": "eventhubs",
                     "id": "/subscriptions/<subscription_id>/providers/Microsoft.Web/locations/westus/managedApis/eventhubs"
+                },
+                "service-now": {
+                    "connectionId": "/subscriptions/<subscription_id>/resourceGroups/logic_demo/providers/Microsoft.Web/connections/service-now",
+                    "connectionName": "service-now",
+                    "id": "/subscriptions/<subscription_id>/providers/Microsoft.Web/locations/westus/managedApis/service-now"
                 }
             }
         }
