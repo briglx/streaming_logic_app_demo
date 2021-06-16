@@ -45,6 +45,12 @@ LOGIC_APP_NAME=TicketApp
 # Kafka
 KAFKA_VM_NAME=kafka-vm
 KAFKA_TOPIC=logic_app_demo
+
+#Streaming Analytics
+SA_NAME=logic_app_demo_sa
+SA_JOB_NAME=logic_app_demo_sa
+SA_INPUT_NAME=SaInputName
+
 ```
 
 ### Resource Group
@@ -93,15 +99,43 @@ Deploy the bitnami image of kafka.
 
 az deployment group create --name "{$KAFKA_VM_NAME}deployment" --resource-group $RG_NAME --template-file kafka/template.json --parameters kafka/parameters.json
 
+# Open ports
+az network nsg rule create -g $RG_NAME --nsg-name $KAFKA_VM_NAME_NSG -n KafkaEndpoint --priority 1020 \
+    --source-address-prefixes <your_computer_ip>/32 --source-port-ranges Any \
+    --destination-address-prefixes '*' --destination-port-ranges 9092 2181 --access Allow \
+    --protocol Tcp --description "Allow from specific IP address ranges on 9092."
+
+# Or for a quick port open
+az vm open-port --resource-group $RG_NAME --name $KAFKA_VM_NAME --port 9092 # Kafka 
+az vm open-port --resource-group $RG_NAME --name $KAFKA_VM_NAME --port 2181 # Zookeeper
+
 # ssh onto machine
 ssh kafka_user@<public_ip_of_kafka_deployment>
+
+```
+
+*Edit config properties*
+
+The files found in `/project/kafka/configs/` show the config files that need to be changed. Ensure the associated files on the server match the settings found in the project files. The most importaint change is setting the `<public_ip_of_kafka_deployment>` in each of the configs.
+
+- `config/consumer.properties`
+- `config/producer.properties`
+- `config/server.properties`
+
+The location of the configs on the server are `/opt/bitnami/kafka/conf/`. After changing the configs. Restart the server.
+
+```bash
+
+# Restart and check status of services
+sudo /opt/bitnami/ctlscript.sh restart
+sudo /opt/bitnami/ctlscript.sh status
 
 # create a new topic
 /opt/bitnami/kafka/bin/kafka-topics.sh --create --zookeeper localhost:2181 --replication-factor 1 --partitions 1 --topic $KAFKA_TOPIC
 
 # Start a new producer and generate a message in the topic
 export KAFKA_OPTS="-Djava.security.auth.login.config=/opt/bitnami/kafka/conf/kafka_jaas.conf"
-/opt/bitnami/kafka/bin/kafka-console-producer.sh --broker-list localhost:9092 --producer.config /opt/bitnami/kafka/conf/producer.properties --topic $KAFKA_TOPIC
+/opt/bitnami/kafka/bin/kafka-console-producer.sh --broker-list <public_ip_of_kafka_deployment>:9092 --producer.config /opt/bitnami/kafka/conf/producer.properties --topic $KAFKA_TOPIC
 
 this is my first message
 this is my second message
@@ -114,10 +148,38 @@ this is my second message
 
  ```bash
 
- /opt/bitnami/kafka/bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic $KAFKA_TOPIC --consumer.config /opt/bitnami/kafka/conf/consumer.properties --from-beginning
+ /opt/bitnami/kafka/bin/kafka-console-consumer.sh --bootstrap-server <public_ip_of_kafka_deployment>:9092 --topic $KAFKA_TOPIC --consumer.config /opt/bitnami/kafka/conf/consumer.properties --from-beginning
 
  ```
 
+ ### Kafka-connect with Eventhub
+
+ On the Kafka machine, download the [Kafka Connect plugin for Azure Event Hubs Connector](https://www.confluent.io/hub/confluentinc/kafka-connect-azure-event-hubs)
+
+ ```bash
+
+ wget https://d1i4a15mxbxib1.cloudfront.net/api/plugins/confluentinc/kafka-connect-azure-event-hubs/versions/1.2.0/confluentinc-kafka-connect-azure-event-hubs-1.2.0.zip
+
+
+```
+
+### Streaming Analytics
+
+```bash
+
+# Create a Job
+az stream-analytics job create --resource-group $RG_NAME --name $SA_NAME --location $RG_REGION  --output-error-policy "Drop" --events-outoforder-policy "Drop" --events-outoforder-max-delay 5 --events-late-arrival-max-delay 16 --data-locale "en-US"
+
+# Create input to eventhub
+az stream-analytics input create --resource-group $RG_NAME --job-name $SA_JOB_NAME --name $SA_INPUT_NAME --type Stream --datasource @datasource.json --serialization @serialization.json
+
+# Create output to Powerbi
+az stream-analytics output create --resource-group $RG_NAME --job-name $SA_JOB_NAME --name $SA_OUTPUT_NAME --datasource @datasource.json --serialization @serialization.json
+
+# Create Transformation query
+az stream-analytics transformation create --resource-group $RG_NAME --job-name $SA_JOB_NAME --name Transformation --streaming-units "6" --transformation-query "${cat query.sql}"
+
+```
 
 ## Generator
 The generator is a python application that runs in a docker container. The container expects the following environment variables stored in a `local.env` file.
@@ -211,3 +273,14 @@ Now that you have all test dependencies installed, you can run linting and tests
     pydocstyle generator
 
 ```
+
+# References
+
+- Python and Kafka https://towardsdatascience.com/getting-started-with-apache-kafka-in-python-604b3250aa05
+- Connect to Kafka from remote machine https://docs.bitnami.com/azure/infrastructure/kafka/administration/connect-remotely/
+- Kafka Listeners Explained https://www.confluent.io/blog/kafka-listeners-explained/
+- VLookup capability in Logic app. See https://social.technet.microsoft.com/wiki/contents/articles/51608.vlookup-scenario-in-azure-logicapps.aspx
+- Kafka Connect for eventhub https://docs.microsoft.com/en-us/azure/event-hubs/event-hubs-kafka-connect-tutorial
+- How to use kafka connect https://docs.confluent.io/platform/current/connect/userguide.html#connect-userguide
+- Azure Event Hubs Source Connector https://www.confluent.io/hub/confluentinc/kafka-connect-azure-event-hubs
+
