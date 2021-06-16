@@ -80,7 +80,6 @@ az vm open-port --resource-group $RG_NAME --name $KAFKA_VM_NAME --port 2181 # Zo
 
 # ssh onto machine
 ssh kafka_user@<public_ip_of_kafka_deployment>
-
 ```
 
 **Edit config properties**
@@ -122,7 +121,6 @@ this is my second message
 # Start a consumer to read the messages
 
  /opt/bitnami/kafka/bin/kafka-console-consumer.sh --bootstrap-server <public_ip_of_kafka_deployment>:9092 --topic $KAFKA_TOPIC --consumer.config /opt/bitnami/kafka/conf/consumer.properties --from-beginning
-
  ```
 
  ### Kafka-connect with Eventhub
@@ -130,7 +128,6 @@ this is my second message
  On the Kafka machine, download the [Kafka Connect plugin for Azure Event Hubs Connector](https://www.confluent.io/hub/confluentinc/kafka-connect-azure-event-hubs)
 
  ```bash
-
  wget https://d1i4a15mxbxib1.cloudfront.net/api/plugins/confluentinc/kafka-connect-azure-event-hubs/versions/1.2.0/confluentinc-kafka-connect-azure-event-hubs-1.2.0.zip
 
 # TODO Document configuration
@@ -147,7 +144,6 @@ az stream-analytics input create --resource-group $RG_NAME --job-name $SA_JOB_NA
 
 # Create Transformation query
 az stream-analytics transformation create --resource-group $RG_NAME --job-name $SA_JOB_NAME --name Transformation --streaming-units "6" --transformation-query "${cat query.sql}"
-
 ```
 
 ### Evenhubs
@@ -164,7 +160,6 @@ az eventhubs eventhub create --name "{$EH_NAME}Filtered" --resource-group $RG_NA
 
 #Create Read Policy and Connection string**
 #TBD
-
 ```
 
 ### Logic App
@@ -196,8 +191,6 @@ Run generator in docker
 #Run app
 > python main.py
 ```
-
-
 
 # Development
 
@@ -237,43 +230,35 @@ Summary of the most relevant points:
 Prefer [f-strings](https://docs.python.org/3/reference/lexical_analysis.html#f-strings) over ``%`` or ``str.format``.
 
 ```python
-
-    #New
-    f"{some_value} {some_other_value}"
-    # Old, wrong
-    "{} {}".format("New", "style")
-    "%s %s" % ("Old", "style")
-
+#New
+f"{some_value} {some_other_value}"
+# Old, wrong
+"{} {}".format("New", "style")
+"%s %s" % ("Old", "style")
 ```
 
 One exception is for logging which uses the percentage formatting. This is to avoid formatting the log message when it is suppressed.
 
 ```python
-
-    _LOGGER.info("Can't connect to the webservice %s at %s", string1, string2)
-
+_LOGGER.info("Can't connect to the webservice %s at %s", string1, string2)
 ```
 
 ### Testing
 You'll need to install the test dependencies into your Python environment:
 
 ```bash
-
-    pip3 install -r requirements_dev.txt
-
+pip3 install -r requirements_dev.txt
 ```
 
 Now that you have all test dependencies installed, you can run linting and tests on the project:
 
 ```bash
-
-    isort .
-    codespell  --skip=".venv"
-    black generator
-    flake8 generator
-    pylint generator
-    pydocstyle generator
-
+isort .
+codespell  --skip=".venv"
+black generator
+flake8 generator
+pylint generator
+pydocstyle generator
 ```
 
 # References
