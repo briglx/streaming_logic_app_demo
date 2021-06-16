@@ -1,56 +1,55 @@
 # Streaming Logic App Demo
 
+This project demonstrates how to query streaming data from Kafka using several Azure technologies:
 
-
-This project demonstrates how to query streaming data using several Azure technologies:
-
-- Azure Logic Apps
-- Azure Eventhubs
 - Kafka Connect
+- Azure Eventhubs
+- Azure Streaming Analytics
+- Azure Logic Apps
 - Service Now Integration
 
 Workflow:
 
-- Generator App sents message to Eventhubs
-- Logic App will push messages to Service Now
+- Generator App sents message to Kafka or Event Hubs
+- Streaming Analytics will aggregate and filter messages into a second Event Hubs
+- Logic App will read events and create a ticket in Service Now
 
-![Architecture Overview](docs/architecture_overview.png "Architecture Overview")
+![Architecture Overview](docs/architecture_overview2.png "Architecture Overview")
 
 
 # Setup
 
 This setup will deploy the core infrastructure needed to run the the solution:
 
-- Core infrastructure
+- Core Infratructure
 - Generator App
-- Core Infrastructure
-- Configure the global variables
 
 ## Core infrastructure
 
-### Global
+Configure the variables.
 
 ```bash
-RG_NAME=logic_demo
-RG_REGION=westus
-STORAGE_ACCOUNT_NAME=logic_demo
-
-#Event Hubs
-EH_NAMESPACE=LogicAppDemoEhn
-EH_NAME=logic_app_demo_eh
-
-# Logic App variables
-LOGIC_APP_NAME=TicketApp
+# Global
+export RG_NAME=logic_demo
+export RG_REGION=westus
+export STORAGE_ACCOUNT_NAME=logic_demo
 
 # Kafka
-KAFKA_VM_NAME=kafka-vm
-KAFKA_TOPIC=logic_app_demo
+export KAFKA_VM_NAME=kafka-vm
+export KAFKA_VM_NAME_NSG=kafkansg
+export KAFKA_TOPIC=logic_app_demo
 
-#Streaming Analytics
-SA_NAME=logic_app_demo_sa
-SA_JOB_NAME=logic_app_demo_sa
-SA_INPUT_NAME=SaInputName
+# Streaming Analytics
+export SA_NAME=logic_app_demo_sa
+export SA_JOB_NAME=logic_app_demo_sa
+export SA_INPUT_NAME=SaInputName
 
+# Event Hubs
+export EH_NAMESPACE=LogicAppDemoEhn
+export EH_NAME=logic_app_demo_eh
+
+# Logic App variables
+export LOGIC_APP_NAME=TicketApp
 ```
 
 ### Resource Group
@@ -61,42 +60,12 @@ Create a resource group for this project
 az group create --name $RG_NAME --location $RG_REGION
 ```
 
-### Evenhubs
-
-```bash
-# Create an Event Hubs namespace. Specify a name for the Event Hubs namespace.
-az eventhubs namespace create --name $EH_NAMESPACE --resource-group $RG_NAME -l $RG_REGION
-
-# Create an event hub. Specify a name for the event hub.
-az eventhubs eventhub create --name $EH_NAME --resource-group $RG_NAME --namespace-name $EH_NAMESPACE
-
-#Create Read Policy and Connection string**
-#TBD
-
-```
-
-### Logic App
-
-**Create Logic App**
-Make a copy of `logic_app\definition-example.json` and rename to `logic_app\definition.json`. Edit the file with the necessary values.
-
-- The `<subscription_id>` is the target subscription id.
-
-Deploy the Logic App
-
-```bash
-az logic workflow create --definition /path_to_project/logic_app/definition.json
---location $RG_REGION
---name $LOGIC_APP_NAME
---resource-group $RG_NAME
-```
-
 ### Kafka
 
 Deploy the bitnami image of kafka. 
 
 ```bash
-
+# Deploy VM
 az deployment group create --name "{$KAFKA_VM_NAME}deployment" --resource-group $RG_NAME --template-file kafka/template.json --parameters kafka/parameters.json
 
 # Open ports
@@ -114,7 +83,7 @@ ssh kafka_user@<public_ip_of_kafka_deployment>
 
 ```
 
-*Edit config properties*
+**Edit config properties**
 
 The files found in `/project/kafka/configs/` show the config files that need to be changed. Ensure the associated files on the server match the settings found in the project files. The most importaint change is setting the `<public_ip_of_kafka_deployment>` in each of the configs.
 
@@ -125,10 +94,17 @@ The files found in `/project/kafka/configs/` show the config files that need to 
 The location of the configs on the server are `/opt/bitnami/kafka/conf/`. After changing the configs. Restart the server.
 
 ```bash
+# Edit configs
+sudo vi /opt/bitnami/kafka/conf/consumer.properties
+sudo vi /opt/bitnami/kafka/conf/producer.properties
+sudo vi /opt/bitnami/kafka/conf/server.properties
 
 # Restart and check status of services
 sudo /opt/bitnami/ctlscript.sh restart
 sudo /opt/bitnami/ctlscript.sh status
+tail -n 400 /opt/bitnami/kafka/logs/server.log
+
+# Testing Creating and reading messages
 
 # create a new topic
 /opt/bitnami/kafka/bin/kafka-topics.sh --create --zookeeper localhost:2181 --replication-factor 1 --partitions 1 --topic $KAFKA_TOPIC
@@ -140,13 +116,10 @@ export KAFKA_OPTS="-Djava.security.auth.login.config=/opt/bitnami/kafka/conf/kaf
 this is my first message
 this is my second message
 
-```
+# Press `CTRL-D` to send the message.
+# Press `CTRL-C` to stop the producer.
 
- Press `CTRL-D` to send the message.
-
- Collect and display the messages
-
- ```bash
+# Start a consumer to read the messages
 
  /opt/bitnami/kafka/bin/kafka-console-consumer.sh --bootstrap-server <public_ip_of_kafka_deployment>:9092 --topic $KAFKA_TOPIC --consumer.config /opt/bitnami/kafka/conf/consumer.properties --from-beginning
 
@@ -160,29 +133,58 @@ this is my second message
 
  wget https://d1i4a15mxbxib1.cloudfront.net/api/plugins/confluentinc/kafka-connect-azure-event-hubs/versions/1.2.0/confluentinc-kafka-connect-azure-event-hubs-1.2.0.zip
 
-
+# TODO Document configuration
 ```
 
 ### Streaming Analytics
 
 ```bash
-
 # Create a Job
 az stream-analytics job create --resource-group $RG_NAME --name $SA_NAME --location $RG_REGION  --output-error-policy "Drop" --events-outoforder-policy "Drop" --events-outoforder-max-delay 5 --events-late-arrival-max-delay 16 --data-locale "en-US"
 
 # Create input to eventhub
 az stream-analytics input create --resource-group $RG_NAME --job-name $SA_JOB_NAME --name $SA_INPUT_NAME --type Stream --datasource @datasource.json --serialization @serialization.json
 
-# Create output to Powerbi
-az stream-analytics output create --resource-group $RG_NAME --job-name $SA_JOB_NAME --name $SA_OUTPUT_NAME --datasource @datasource.json --serialization @serialization.json
-
 # Create Transformation query
 az stream-analytics transformation create --resource-group $RG_NAME --job-name $SA_JOB_NAME --name Transformation --streaming-units "6" --transformation-query "${cat query.sql}"
 
 ```
 
+### Evenhubs
+
+```bash
+# Create an Event Hubs namespace. Specify a name for the Event Hubs namespace.
+az eventhubs namespace create --name $EH_NAMESPACE --resource-group $RG_NAME -l $RG_REGION
+
+# Create an event hub. Specify a name for the event hub.
+az eventhubs eventhub create --name $EH_NAME --resource-group $RG_NAME --namespace-name $EH_NAMESPACE
+
+# Create the event hub for the filtered messages.
+az eventhubs eventhub create --name "{$EH_NAME}Filtered" --resource-group $RG_NAME --namespace-name $EH_NAMESPACE
+
+#Create Read Policy and Connection string**
+#TBD
+
+```
+
+### Logic App
+
+Make a copy of `logic_app\definition-example.json` and rename to `logic_app\definition.json`. Edit the file with the necessary values.
+
+```bash
+# Deploy the logic app
+az logic workflow create --definition /path_to_project/logic_app/definition.json
+--location $RG_REGION
+--name $LOGIC_APP_NAME
+--resource-group $RG_NAME
+```
+
 ## Generator
-The generator is a python application that runs in a docker container. The container expects the following environment variables stored in a `local.env` file.
+The generator is a python application that runs in a docker container. The container expects the environment variables stored in a `local.env` file. 
+
+Copy the `project_path/generator/local_example.env` to `project_path/generator/local.env` and edit the values.
+
+The kafka password is found in `/opt/bitnami/kafka/ kafka_jaas.conf`
 
 Run generator in docker
 
