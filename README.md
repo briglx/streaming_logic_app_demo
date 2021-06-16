@@ -131,20 +131,6 @@ this is my second message
 
 # TODO Document configuration
 ```
-
-### Streaming Analytics
-
-```bash
-# Create a Job
-az stream-analytics job create --resource-group $RG_NAME --name $SA_NAME --location $RG_REGION  --output-error-policy "Drop" --events-outoforder-policy "Drop" --events-outoforder-max-delay 5 --events-late-arrival-max-delay 16 --data-locale "en-US"
-
-# Create input to eventhub
-az stream-analytics input create --resource-group $RG_NAME --job-name $SA_JOB_NAME --name $SA_INPUT_NAME --type Stream --datasource @datasource.json --serialization @serialization.json
-
-# Create Transformation query
-az stream-analytics transformation create --resource-group $RG_NAME --job-name $SA_JOB_NAME --name Transformation --streaming-units "6" --transformation-query "${cat query.sql}"
-```
-
 ### Evenhubs
 
 ```bash
@@ -160,6 +146,21 @@ az eventhubs eventhub create --name "{$EH_NAME}Filtered" --resource-group $RG_NA
 #Create Read Policy and Connection string**
 #TBD
 ```
+
+### Streaming Analytics
+
+```bash
+# Create a Job
+az stream-analytics job create --resource-group $RG_NAME --name $SA_NAME --location $RG_REGION  --output-error-policy "Drop" --events-outoforder-policy "Drop" --events-outoforder-max-delay 5 --events-late-arrival-max-delay 16 --data-locale "en-US"
+
+# Create input to eventhub
+az stream-analytics input create --resource-group $RG_NAME --job-name $SA_JOB_NAME --name $SA_INPUT_NAME --type Stream --datasource @datasource.json --serialization @serialization.json
+
+# Create Transformation query
+az stream-analytics transformation create --resource-group $RG_NAME --job-name $SA_JOB_NAME --name Transformation --streaming-units "6" --transformation-query "${cat query.sql}"
+```
+
+
 
 ### Logic App
 
