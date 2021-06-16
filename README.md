@@ -2,8 +2,8 @@
 
 This project demonstrates how to query streaming data from Kafka using several Azure technologies:
 
-- Kafka Connect
-- Azure Eventhubs
+- Kafka Mirror Maker
+- Azure Event Hubs
 - Azure Streaming Analytics
 - Azure Logic Apps
 - Service Now Integration
@@ -39,14 +39,14 @@ export KAFKA_VM_NAME=kafka-vm
 export KAFKA_VM_NAME_NSG=kafkansg
 export KAFKA_TOPIC=logic_app_demo
 
+# Event Hubs
+export EH_NAMESPACE=LogicAppDemoEhn
+export EH_NAME=logic_app_demo_eh
+
 # Streaming Analytics
 export SA_NAME=logic_app_demo_sa
 export SA_JOB_NAME=logic_app_demo_sa
 export SA_INPUT_NAME=SaInputName
-
-# Event Hubs
-export EH_NAMESPACE=LogicAppDemoEhn
-export EH_NAME=logic_app_demo_eh
 
 # Logic App variables
 export LOGIC_APP_NAME=TicketApp
@@ -122,30 +122,42 @@ this is my second message
  /opt/bitnami/kafka/bin/kafka-console-consumer.sh --bootstrap-server <public_ip_of_kafka_deployment>:9092 --topic $KAFKA_TOPIC --consumer.config /opt/bitnami/kafka/conf/consumer.properties --from-beginning
  ```
 
- ### Kafka-connect with Eventhub
 
- On the Kafka machine, download the [Kafka Connect plugin for Azure Event Hubs Connector](https://www.confluent.io/hub/confluentinc/kafka-connect-azure-event-hubs)
 
- ```bash
- wget https://d1i4a15mxbxib1.cloudfront.net/api/plugins/confluentinc/kafka-connect-azure-event-hubs/versions/1.2.0/confluentinc-kafka-connect-azure-event-hubs-1.2.0.zip
+If you get a message like: `[2021-06-16 23:18:33,854] WARN [Producer clientId=mirror_maker_producer] Error while fetching metadata with correlation id 12 : {logic_app_demo=UNKNOWN_TOPIC_OR_PARTITION} (org.apache.kafka.clients.NetworkClient)` ensure the target EventHubs name matches. Topics = EventHubs Instances.
 
-# TODO Document configuration
-```
 ### Evenhubs
 
 ```bash
 # Create an Event Hubs namespace. Specify a name for the Event Hubs namespace.
 az eventhubs namespace create --name $EH_NAMESPACE --resource-group $RG_NAME -l $RG_REGION
 
-# Create an event hub. Specify a name for the event hub.
+# Create an Event Hub Instance. Specify a name for the event hub.
 az eventhubs eventhub create --name $EH_NAME --resource-group $RG_NAME --namespace-name $EH_NAMESPACE
 
-# Create the event hub for the filtered messages.
-az eventhubs eventhub create --name "{$EH_NAME}Filtered" --resource-group $RG_NAME --namespace-name $EH_NAMESPACE
+# Create the Event Hub instance for the filtered messages.
+az eventhubs eventhub create --name "filtered_{$EH_NAME}" --resource-group $RG_NAME --namespace-name $EH_NAMESPACE
 
-#Create Read Policy and Connection string**
-#TBD
+# Create Read and Listen Policies for Connection strings
+az eventhubs eventhub authorization-rule create --resource-group $RG_NAME --namespace-name $EH_NAMESPACE --eventhub-name $EH_NAME --name kafka_send_only --rights Send
+az eventhubs eventhub authorization-rule create --resource-group $RG_NAME --namespace-name $EH_NAMESPACE --eventhub-name "filtered_{$EH_NAME}" --name stream_analytics_listen_only --rights Listen
 ```
+
+### Kafka Mirror Maker with Event Hubs
+
+Kafka MirrorMaker will have the Kafka cluster as the consumer/source and Event Hubs as its producer/destination.
+
+Update the consumer configuration file `project/mirror_maker/source-kafka.config` with the properties of the source Kafka cluster.
+
+Update the producer configuration file `project/mirror_maker/mirror_eventhub` with the properties of the target Event Hubs.
+
+run the command on the kafka server to configure mirror maker
+```bash
+export KAFKA_OPTS="-Djava.security.auth.login.config=/opt/bitnami/kafka/conf/kafka_jaas.conf"
+/opt/bitnami/kafka/bin/kafka-mirror-maker.sh --consumer.config /opt/bitnami/kafka/conf/mirror-maker-source-kafka.config --num.streams 1 --producer.config /opt/bitnami/kafka/conf/mirror-maker-target-eventhubs.config --whitelist=".*"
+```
+
+**Errors**
 
 ### Streaming Analytics
 
@@ -153,7 +165,7 @@ az eventhubs eventhub create --name "{$EH_NAME}Filtered" --resource-group $RG_NA
 # Create a Job
 az stream-analytics job create --resource-group $RG_NAME --name $SA_NAME --location $RG_REGION  --output-error-policy "Drop" --events-outoforder-policy "Drop" --events-outoforder-max-delay 5 --events-late-arrival-max-delay 16 --data-locale "en-US"
 
-# Create input to eventhub
+# Create input to event hubs
 az stream-analytics input create --resource-group $RG_NAME --job-name $SA_JOB_NAME --name $SA_INPUT_NAME --type Stream --datasource @datasource.json --serialization @serialization.json
 
 # Create Transformation query
@@ -269,7 +281,8 @@ pydocstyle generator
 - Kafka Listeners Explained https://www.confluent.io/blog/kafka-listeners-explained/
 - Kafka configure SASL_PLAINTEXT https://docs.vmware.com/en/VMware-Smart-Assurance/10.1.0/sa-ui-installation-config-guide-10.1.0/GUID-3E473EC3-732A-4963-81BD-13BCCD3AC700.html
 - VLookup capability in Logic app. See https://social.technet.microsoft.com/wiki/contents/articles/51608.vlookup-scenario-in-azure-logicapps.aspx
-- Kafka Connect for eventhub https://docs.microsoft.com/en-us/azure/event-hubs/event-hubs-kafka-connect-tutorial
+- Kafka Connect for Event Hubs https://docs.microsoft.com/en-us/azure/event-hubs/event-hubs-kafka-connect-tutorial
 - How to use kafka connect https://docs.confluent.io/platform/current/connect/userguide.html#connect-userguide
 - Azure Event Hubs Source Connector https://www.confluent.io/hub/confluentinc/kafka-connect-azure-event-hubs
+- Kafka to Event Hubs with Mirror Maker https://docs.microsoft.com/en-us/azure/event-hubs/event-hubs-kafka-mirror-maker-tutorial
 
