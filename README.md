@@ -119,7 +119,6 @@ this is my second message
 # Press `CTRL-C` to stop the producer.
 
 # Start a consumer to read the messages
-
  /opt/bitnami/kafka/bin/kafka-console-consumer.sh --bootstrap-server <public_ip_of_kafka_deployment>:9092 --topic $KAFKA_TOPIC --consumer.config /opt/bitnami/kafka/conf/consumer.properties --from-beginning
  ```
 
@@ -189,7 +188,8 @@ Run generator in docker
 > docker run --rm -it --env-file local.env streaminglogicappdemo:latest
 
 #Run app
-> python main.py
+> python main.py # Generate message for event hubs
+> python kafka_generator.py # Generate message for Kafka
 ```
 
 # Development
@@ -266,6 +266,7 @@ pydocstyle generator
 - Python and Kafka https://towardsdatascience.com/getting-started-with-apache-kafka-in-python-604b3250aa05
 - Connect to Kafka from remote machine https://docs.bitnami.com/azure/infrastructure/kafka/administration/connect-remotely/
 - Kafka Listeners Explained https://www.confluent.io/blog/kafka-listeners-explained/
+- Kafka configure SASL_PLAINTEXT https://docs.vmware.com/en/VMware-Smart-Assurance/10.1.0/sa-ui-installation-config-guide-10.1.0/GUID-3E473EC3-732A-4963-81BD-13BCCD3AC700.html
 - VLookup capability in Logic app. See https://social.technet.microsoft.com/wiki/contents/articles/51608.vlookup-scenario-in-azure-logicapps.aspx
 - Kafka Connect for eventhub https://docs.microsoft.com/en-us/azure/event-hubs/event-hubs-kafka-connect-tutorial
 - How to use kafka connect https://docs.confluent.io/platform/current/connect/userguide.html#connect-userguide

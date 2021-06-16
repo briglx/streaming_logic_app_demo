@@ -50,4 +50,4 @@ def render_dict(data, template_path, template_name, filters=None):
 def render_json(data, template_path, template_name, filters=None):
     """Render data as Json for a given template."""
     result_dict = render_dict(data, template_path, template_name, filters)
-    return json.dumps(result_dict)
+    return json.dumps(result_dict).encode("utf-8")
