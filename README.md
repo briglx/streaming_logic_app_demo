@@ -46,7 +46,8 @@ export EH_NAME=logic_app_demo_eh
 # Streaming Analytics
 export SA_NAME=logic_app_demo_sa
 export SA_JOB_NAME=logic_app_demo_sa
-export SA_INPUT_NAME=SaInputName
+export SA_INPUT_NAME=RawEventHub
+export SA_OUTPUT_NAME=FilteredEventHub
 
 # Logic App variables
 export LOGIC_APP_NAME=TicketApp
@@ -140,7 +141,8 @@ az eventhubs eventhub create --name "filtered_{$EH_NAME}" --resource-group $RG_N
 
 # Create Read and Listen Policies for Connection strings
 az eventhubs eventhub authorization-rule create --resource-group $RG_NAME --namespace-name $EH_NAMESPACE --eventhub-name $EH_NAME --name kafka_send_only --rights Send
-az eventhubs eventhub authorization-rule create --resource-group $RG_NAME --namespace-name $EH_NAMESPACE --eventhub-name "filtered_{$EH_NAME}" --name stream_analytics_listen_only --rights Listen
+az eventhubs eventhub authorization-rule create --resource-group $RG_NAME --namespace-name $EH_NAMESPACE --eventhub-name $EH_NAME --name stream_analytics_listen_only --rights Listen
+az eventhubs eventhub authorization-rule create --resource-group $RG_NAME --namespace-name $EH_NAMESPACE --eventhub-name "filtered_$EH_NAME" --name stream_analytics_send_only --rights Send
 ```
 
 ### Kafka Mirror Maker with Event Hubs
@@ -154,7 +156,7 @@ Update the producer configuration file `project/mirror_maker/mirror_eventhub` wi
 run the command on the kafka server to configure mirror maker
 ```bash
 export KAFKA_OPTS="-Djava.security.auth.login.config=/opt/bitnami/kafka/conf/kafka_jaas.conf"
-/opt/bitnami/kafka/bin/kafka-mirror-maker.sh --consumer.config /opt/bitnami/kafka/conf/mirror-maker-source-kafka.config --num.streams 1 --producer.config /opt/bitnami/kafka/conf/mirror-maker-target-eventhubs.config --whitelist=".*"
+/opt/bitnami/kafka/bin/kafka-mirror-maker.sh --consumer.config /opt/bitnami/kafka/conf/mirror-maker-source-kafka.config --num.streams 1 --producer.config /opt/bitnami/kafka/conf/mirror-maker-target-eventhubs.config --whitelist=".*" &
 ```
 
 **Errors**
@@ -166,7 +168,10 @@ export KAFKA_OPTS="-Djava.security.auth.login.config=/opt/bitnami/kafka/conf/kaf
 az stream-analytics job create --resource-group $RG_NAME --name $SA_NAME --location $RG_REGION  --output-error-policy "Drop" --events-outoforder-policy "Drop" --events-outoforder-max-delay 5 --events-late-arrival-max-delay 16 --data-locale "en-US"
 
 # Create input to event hubs
-az stream-analytics input create --resource-group $RG_NAME --job-name $SA_JOB_NAME --name $SA_INPUT_NAME --type Stream --datasource @datasource.json --serialization @serialization.json
+az stream-analytics input create --resource-group $RG_NAME --job-name $SA_JOB_NAME --name $SA_INPUT_NAME --type Stream --datasource @input_datasource.json --serialization @serialization.json
+
+# Create output to filtered event hubs
+az stream-analytics output create --resource-group $RG_NAME --job-name $SA_JOB_NAME --name $SA_OUTPUT_NAME --datasource @output_datasource.json --serialization @serialization.json
 
 # Create Transformation query
 az stream-analytics transformation create --resource-group $RG_NAME --job-name $SA_JOB_NAME --name Transformation --streaming-units "6" --transformation-query "${cat query.sql}"
@@ -285,4 +290,5 @@ pydocstyle generator
 - How to use kafka connect https://docs.confluent.io/platform/current/connect/userguide.html#connect-userguide
 - Azure Event Hubs Source Connector https://www.confluent.io/hub/confluentinc/kafka-connect-azure-event-hubs
 - Kafka to Event Hubs with Mirror Maker https://docs.microsoft.com/en-us/azure/event-hubs/event-hubs-kafka-mirror-maker-tutorial
-
+- Streaming Analytics Common Queries https://docs.microsoft.com/en-us/azure/stream-analytics/stream-analytics-stream-analytics-query-patterns
+- Streaming Analytics Built in Functions https://docs.microsoft.com/en-us/stream-analytics-query/built-in-functions-azure-stream-analytics

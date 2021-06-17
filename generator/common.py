@@ -4,13 +4,15 @@ import random
 import uuid
 from datetime import datetime, timedelta, timezone
 
-TOTAL_DEVICE_COUNT = 60
+TOTAL_DEVICE_COUNT = 10
 FAULTY_DEVICE_COUNT = 3
 FAULT_DURATION = 5
 FAULT_CHANCE = 0.1
-DEFAULT_WAIT_TIME_SEC = 30
+DEFAULT_WAIT_TIME_SEC = 5
 
 IP_NET = ipaddress.ip_network("10.0.0.0/12")
+
+EVENT_CODES = ["3f25", "19a5", "f6d2", "976b", "f8f4", "ffff", "3d4b", "d9dd", "6050", "2b9b"]
 
 
 def generate_guid():
@@ -21,6 +23,11 @@ def generate_guid():
 def generate_id():
     """Generate Hexadecimal 32 length id."""
     return f"{random.randrange(16 ** 32):32x}"
+
+
+def generate_event_reason_code_id():
+    return random.choice(EVENT_CODES)
+    # return f"{random.randrange(2 ** 16):04x}"
 
 
 def get_date_now_isoformat():
@@ -99,7 +106,7 @@ def create_sample_data(device):
             "set_or_clear": True,
             "create_datetime": get_date_isoformat(period_start_time),
             "stop_point_id": f"{random.randrange(2 ** 32):08x}",
-            "event_reason_code_id": f"{random.randrange(2 ** 16):04x}",
+            "event_reason_code_id":generate_event_reason_code_id(),
             "period_start_time": get_date_isoformat(period_start_time),
             "period_end_time": get_date_isoformat(period_end_time),
             "values": values,

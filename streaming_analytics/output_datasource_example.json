@@ -1,0 +1,10 @@
+{
+    "type": "Microsoft.ServiceBus/EventHub",
+     "properties": {
+         "serviceBusNamespace": "LogicAppDemoEhn",
+         "sharedAccessPolicyName": "stream_analytics_send_only",
+         "sharedAccessPolicyKey": "<shared access policy key>",
+         "eventHubName": "filtered_logic_app_demo_eh",
+         "consumerGroupName": "$Default"
+     }
+}

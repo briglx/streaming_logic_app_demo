@@ -8,3 +8,5 @@ __pycache__
 
 # Project specific
 local.env
+streaming_analytics/output_datasource.json
+streaming_analytics/input_datasource.json
