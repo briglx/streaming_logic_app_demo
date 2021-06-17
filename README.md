@@ -123,10 +123,6 @@ this is my second message
  /opt/bitnami/kafka/bin/kafka-console-consumer.sh --bootstrap-server <public_ip_of_kafka_deployment>:9092 --topic $KAFKA_TOPIC --consumer.config /opt/bitnami/kafka/conf/consumer.properties --from-beginning
  ```
 
-
-
-If you get a message like: `[2021-06-16 23:18:33,854] WARN [Producer clientId=mirror_maker_producer] Error while fetching metadata with correlation id 12 : {logic_app_demo=UNKNOWN_TOPIC_OR_PARTITION} (org.apache.kafka.clients.NetworkClient)` ensure the target EventHubs name matches. Topics = EventHubs Instances.
-
 ### Evenhubs
 
 ```bash
@@ -160,6 +156,8 @@ export KAFKA_OPTS="-Djava.security.auth.login.config=/opt/bitnami/kafka/conf/kaf
 ```
 
 **Errors**
+
+If you get a message like: `[2021-06-16 23:18:33,854] WARN [Producer clientId=mirror_maker_producer] Error while fetching metadata with correlation id 12 : {logic_app_demo=UNKNOWN_TOPIC_OR_PARTITION} (org.apache.kafka.clients.NetworkClient)` ensure the target EventHubs name matches. Topics = EventHubs Instances.
 
 ### Streaming Analytics
 
