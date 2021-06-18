@@ -44,7 +44,6 @@ export EH_NAMESPACE=LogicAppDemoEhn
 export EH_NAME=logic_app_demo_eh
 
 # Streaming Analytics
-export SA_NAME=logic_app_demo_sa
 export SA_JOB_NAME=logic_app_demo_sa
 export SA_INPUT_NAME=RawEventHub
 export SA_OUTPUT_NAME=FilteredEventHub
@@ -163,7 +162,7 @@ If you get a message like: `[2021-06-16 23:18:33,854] WARN [Producer clientId=mi
 
 ```bash
 # Create a Job
-az stream-analytics job create --resource-group $RG_NAME --name $SA_NAME --location $RG_REGION  --output-error-policy "Drop" --events-outoforder-policy "Drop" --events-outoforder-max-delay 5 --events-late-arrival-max-delay 16 --data-locale "en-US"
+az stream-analytics job create --resource-group $RG_NAME --name $SA_JOB_NAME --location $RG_REGION  --output-error-policy "Drop" --events-outoforder-policy "Drop" --events-outoforder-max-delay 5 --events-late-arrival-max-delay 16 --data-locale "en-US"
 
 # Create input to event hubs
 az stream-analytics input create --resource-group $RG_NAME --job-name $SA_JOB_NAME --name $SA_INPUT_NAME --type Stream --datasource @input_datasource.json --serialization @serialization.json
@@ -174,8 +173,6 @@ az stream-analytics output create --resource-group $RG_NAME --job-name $SA_JOB_N
 # Create Transformation query
 az stream-analytics transformation create --resource-group $RG_NAME --job-name $SA_JOB_NAME --name Transformation --streaming-units "6" --transformation-query "${cat query.sql}"
 ```
-
-
 
 ### Logic App
 
@@ -288,5 +285,6 @@ pydocstyle generator
 - How to use kafka connect https://docs.confluent.io/platform/current/connect/userguide.html#connect-userguide
 - Azure Event Hubs Source Connector https://www.confluent.io/hub/confluentinc/kafka-connect-azure-event-hubs
 - Kafka to Event Hubs with Mirror Maker https://docs.microsoft.com/en-us/azure/event-hubs/event-hubs-kafka-mirror-maker-tutorial
+- Kafka using Connect https://docs.confluent.io/home/connect/userguide.html#connect-installing-plugins
 - Streaming Analytics Common Queries https://docs.microsoft.com/en-us/azure/stream-analytics/stream-analytics-stream-analytics-query-patterns
 - Streaming Analytics Built in Functions https://docs.microsoft.com/en-us/stream-analytics-query/built-in-functions-azure-stream-analytics
