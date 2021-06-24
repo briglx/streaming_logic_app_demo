@@ -172,6 +172,10 @@ az stream-analytics output create --resource-group $RG_NAME --job-name $SA_JOB_N
 
 # Create Transformation query
 az stream-analytics transformation create --resource-group $RG_NAME --job-name $SA_JOB_NAME --name Transformation --streaming-units "6" --transformation-query "${cat query.sql}"
+
+# TODO
+# Upload reference data to blob storage
+# Add reference input stram to job
 ```
 
 ### Logic App
@@ -274,6 +278,17 @@ pylint generator
 pydocstyle generator
 ```
 
+# Observations and Learnings
+
+- Mirror maker creates new EventHubs with a retention period of 7 days.
+
+# Common Issues
+
+**Mirror Maker - Lag Time**
+
+If Mirror Maker fails, messages will backup. The key indicator of this is Lag time on the consumer. Restarting Mirror Maker fixes the issue.
+
+
 # References
 
 - Python and Kafka https://towardsdatascience.com/getting-started-with-apache-kafka-in-python-604b3250aa05
@@ -288,3 +303,4 @@ pydocstyle generator
 - Kafka using Connect https://docs.confluent.io/home/connect/userguide.html#connect-installing-plugins
 - Streaming Analytics Common Queries https://docs.microsoft.com/en-us/azure/stream-analytics/stream-analytics-stream-analytics-query-patterns
 - Streaming Analytics Built in Functions https://docs.microsoft.com/en-us/stream-analytics-query/built-in-functions-azure-stream-analytics
+- Streaming Analytics - Add reference data https://docs.microsoft.com/en-us/azure/stream-analytics/stream-analytics-use-reference-data

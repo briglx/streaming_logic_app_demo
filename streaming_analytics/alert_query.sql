@@ -1,21 +1,25 @@
 SELECT
-    deviceId,
-    ipAddress,
-    operatorId,
-    deviceSerialNbr,
-    Collect(eventId) as eventId,
-    Collect(event) as event,
-    Collect(eventName) as eventName,
-    Collect(setOrClear) as setOrClear,
-    Collect(stopPointId) as stopPointId,
-	eventReasonCodeId,
-    Collect(eventDtm) as EventDate,
-    Count(eventId) as EventCount,
-	COUNT(eventReasonCodeId) AS [ReasonCount]
+    E.deviceId,
+    E.ipAddress,
+    E.operatorId,
+    E.deviceSerialNbr,
+    Collect(E.eventId) as eventId,
+    Collect(E.event) as event,
+    L.Description as eventDescription,
+    Collect(E.eventName) as eventName,
+    Collect(E.setOrClear) as setOrClear,
+    Collect(E.stopPointId) as stopPointId,
+	E.eventReasonCodeId,
+    Collect(E.eventDtm) as EventDate,
+    Count(E.eventId) as EventCount,
+	COUNT(E.eventReasonCodeId) AS [ReasonCount]
 Into
     FilteredEventHub
 FROM
-	RawEventHub
+	RawEventHub E
+JOIN
+    EventNameLookup L
+ON E.eventId = L.Code  
 Where
      eventReasonCodeId like 'ffff'
 GROUP BY
