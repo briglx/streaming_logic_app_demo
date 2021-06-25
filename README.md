@@ -4,14 +4,14 @@ This project demonstrates how to query streaming data from Kafka using several A
 
 - Kafka Mirror Maker
 - Azure Event Hubs
-- Azure Streaming Analytics
+- Azure Stream Analytics
 - Azure Logic Apps
 - Service Now Integration
 
 Workflow:
 
 - Generator App sents message to Kafka or Event Hubs
-- Streaming Analytics will aggregate and filter messages into a second Event Hubs
+- Stream Analytics will aggregate and filter messages into a second Event Hubs
 - Logic App will read events and create a ticket in Service Now
 
 ![Architecture Overview](docs/architecture_overview2.png "Architecture Overview")
@@ -43,7 +43,7 @@ export KAFKA_TOPIC=logic_app_demo
 export EH_NAMESPACE=LogicAppDemoEhn
 export EH_NAME=logic_app_demo_eh
 
-# Streaming Analytics
+# Stream Analytics
 export SA_JOB_NAME=logic_app_demo_sa
 export SA_INPUT_NAME=RawEventHub
 export SA_OUTPUT_NAME=FilteredEventHub
@@ -158,7 +158,7 @@ export KAFKA_OPTS="-Djava.security.auth.login.config=/opt/bitnami/kafka/conf/kaf
 
 If you get a message like: `[2021-06-16 23:18:33,854] WARN [Producer clientId=mirror_maker_producer] Error while fetching metadata with correlation id 12 : {logic_app_demo=UNKNOWN_TOPIC_OR_PARTITION} (org.apache.kafka.clients.NetworkClient)` ensure the target EventHubs name matches. Topics = EventHubs Instances.
 
-### Streaming Analytics
+### Stream Analytics
 
 ```bash
 # Create a Job
@@ -174,8 +174,9 @@ az stream-analytics output create --resource-group $RG_NAME --job-name $SA_JOB_N
 az stream-analytics transformation create --resource-group $RG_NAME --job-name $SA_JOB_NAME --name Transformation --streaming-units "6" --transformation-query "${cat query.sql}"
 
 # TODO
+# Add create policy
 # Upload reference data to blob storage
-# Add reference input stram to job
+# Add reference input stream to job
 ```
 
 ### Logic App
@@ -301,6 +302,6 @@ If Mirror Maker fails, messages will backup. The key indicator of this is Lag ti
 - Azure Event Hubs Source Connector https://www.confluent.io/hub/confluentinc/kafka-connect-azure-event-hubs
 - Kafka to Event Hubs with Mirror Maker https://docs.microsoft.com/en-us/azure/event-hubs/event-hubs-kafka-mirror-maker-tutorial
 - Kafka using Connect https://docs.confluent.io/home/connect/userguide.html#connect-installing-plugins
-- Streaming Analytics Common Queries https://docs.microsoft.com/en-us/azure/stream-analytics/stream-analytics-stream-analytics-query-patterns
-- Streaming Analytics Built in Functions https://docs.microsoft.com/en-us/stream-analytics-query/built-in-functions-azure-stream-analytics
-- Streaming Analytics - Add reference data https://docs.microsoft.com/en-us/azure/stream-analytics/stream-analytics-use-reference-data
+- Stream Analytics Common Queries https://docs.microsoft.com/en-us/azure/stream-analytics/stream-analytics-stream-analytics-query-patterns
+- Stream Analytics Built in Functions https://docs.microsoft.com/en-us/stream-analytics-query/built-in-functions-azure-stream-analytics
+- Stream Analytics - Add reference data https://docs.microsoft.com/en-us/azure/stream-analytics/stream-analytics-use-reference-data

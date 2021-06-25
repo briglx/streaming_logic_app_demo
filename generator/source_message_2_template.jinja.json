@@ -1,7 +1,6 @@
 {
     "deviceId": "{{device.device_id}}",
-    "eventId": "{{event.event_id}}",
-    "event": "{{event.event_desc}}",
+    "eventId": {{event.event_id}},
     "eventName": "{{event.event_name}}",
     "setOrClear": "{{event.set_or_clear}}",
     "operatorId": "{{device.operator_id}}",

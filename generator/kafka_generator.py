@@ -1,41 +1,40 @@
 """Main script for Kafka Message Generator."""
 import argparse
-import json
 import logging
 import os
 import sys
 import time
-
-from kafka import KafkaProducer
 
 import template_jinja as template
 from common import (
     DEFAULT_WAIT_TIME_SEC,
     FAULTY_DEVICE_COUNT,
     create_device_list,
-    create_drop_list,
+    create_fault_list,
     create_sample_data,
     drop_device_message,
 )
+
+from kafka import KafkaProducer
 
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 
 
 def main():
     """Create sample messages."""
-
     device_list = create_device_list()
-    device_drop_list = create_drop_list(device_list, FAULTY_DEVICE_COUNT)
+    faulty_devices_ids, _ = create_fault_list(device_list, FAULTY_DEVICE_COUNT)
     device_drop_count = {}
 
     # Loop Forever
     while True:
 
         for device in device_list:
-            # Get data
-            data = create_sample_data(device)
 
-            if drop_device_message(data, device_drop_list, device_drop_count):
+            # Get data
+            data = create_sample_data(device, faulty_devices_ids)
+
+            if drop_device_message(device["device_id"], device_drop_count):
                 logging.info("dropping device message...")
             else:
 

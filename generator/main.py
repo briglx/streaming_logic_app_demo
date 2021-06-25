@@ -7,15 +7,14 @@ import os
 import signal
 import sys
 
+import template_jinja as template
 from azure.eventhub import EventData
 from azure.eventhub.aio import EventHubProducerClient
-
-import template_jinja as template
-from generator import (
+from common import (
     DEFAULT_WAIT_TIME_SEC,
     FAULTY_DEVICE_COUNT,
     create_device_list,
-    create_drop_list,
+    create_fault_list,
     create_sample_data,
     drop_device_message,
 )
@@ -28,7 +27,7 @@ async def run():
     async with PRODUCER:
 
         device_list = create_device_list()
-        device_drop_list = create_drop_list(device_list, FAULTY_DEVICE_COUNT)
+        faulty_devices_ids = create_fault_list(device_list, FAULTY_DEVICE_COUNT)
         device_drop_count = {}
 
         # Loop Forever
@@ -40,9 +39,9 @@ async def run():
             for device in device_list:
 
                 # Get data
-                data = create_sample_data(device)
+                data = create_sample_data(device, faulty_devices_ids)
 
-                if drop_device_message(data, device_drop_list, device_drop_count):
+                if drop_device_message(device["device_id"], device_drop_count):
                     logging.info("dropping device message...")
                 else:
 

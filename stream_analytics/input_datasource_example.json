@@ -2,7 +2,7 @@
     "type": "Microsoft.ServiceBus/EventHub",
      "properties": {
          "serviceBusNamespace": "LogicAppDemoEhn",
-         "sharedAccessPolicyName": "StreamingAnalyticsListen",
+         "sharedAccessPolicyName": "stream_analytics_listen_only",
          "sharedAccessPolicyKey": "<shared access policy key>",
          "eventHubName": "logic_app_demo",
          "consumerGroupName": "$Default"

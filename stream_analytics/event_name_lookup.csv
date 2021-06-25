@@ -1,0 +1,39 @@
+Code,Description
+100,Normal State
+101,Voltage Dropout
+105,System Time Sync Adjustment
+108,Maintenance Door Open/Closed
+109,Loss of Comms with Local Devices
+117,Warning Extreme Temperature
+118,Extreme Temperature Reached
+131,Missing Tables
+134,Device Restart
+140,In Service
+141,Software Activation Failed
+143,Software Error
+144,Battery Disconnected
+152,Software Digest Missing
+153,Software Digest Invalid
+158,Battery Charge Fail
+165,Vehicle Ignition off
+172,Orphan Mode Timeout
+182,Software Installation Failed
+183,Fatal Failure
+186,P2PE Device Tampered
+201,CSC Target Fault
+209,Tri-Reader Comms Error
+220,Missing Keys
+602,Disk Almost Full
+603,Disk Full
+1201,Barrier Failure
+1228,68K Board Out of Service
+2205,DAP Taps Table Almost Full
+2206,DAP Taps Table Full
+2207,DAP Database Failure
+2224,DAP Taps Error In Record
+2228,DAP Invalid Encryption Key
+2243,DAP Risk List Far Behind
+2246,BIN List MAC Error
+2247,RTVS MAC Error
+50101,No Heartbeat
+50140,Out of Service (50140)
