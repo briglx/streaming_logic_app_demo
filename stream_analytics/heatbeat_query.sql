@@ -1,9 +1,13 @@
 Select 
     deviceId,
-    COUNT(*) AS HeartbeatCount
+    ipAddress,
+    operatorId,
+    deviceSerialNbr,
+    COUNT(*) AS HeartbeatCount,
+    'HeartbeatQuery' as Source
 from RawEventHub TIMESTAMP BY eventDtm
 Group By
     deviceId,
-	TumblingWindow(second, 30)
+	TumblingWindow(minute, 3)
 Having 
-    HeartbeatCount < 5
+    HeartbeatCount < 4
