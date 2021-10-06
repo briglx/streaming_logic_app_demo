@@ -223,7 +223,7 @@ Setup your dev environment by creating a virtual environment
 
 ```bash
 # virtualenv \path\to\.venv -p path\to\specific_version_python.exe
-python -m venv .venv.
+python3 -m venv .venv
 .venv\scripts\activate
 
 deactivate
